@@ -82,7 +82,7 @@ services:
       POSTGRES_PASSWORD: property_password
     volumes:
       - property-data:/var/lib/postgresql/data
-      #- ./data-products/property/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./data-products/property/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U property_user -d property"]
       interval: 5s
@@ -111,7 +111,7 @@ services:
       POSTGRES_PASSWORD: leasing_password
     volumes:
       - leasing-data:/var/lib/postgresql/data
-      #- ./data-products/leasing/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./data-products/leasing/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U leasing_user -d leasing"]
       interval: 5s
@@ -140,7 +140,7 @@ services:
       POSTGRES_PASSWORD: finance_password
     volumes:
       - finance-data:/var/lib/postgresql/data
-      #- ./data-products/finance/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./data-products/finance/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U finance_user -d finance"]
       interval: 5s
