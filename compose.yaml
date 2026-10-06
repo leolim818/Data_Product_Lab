@@ -161,13 +161,10 @@ services:
       - leasing-db
       - finance-db
     volumes:
-      - pgadmin-data:/var/lib/pgadmin       
-
-
+      - pgadmin-data:/var/lib/pgadmin
 
 volumes:
   property-data:
   leasing-data:
   pgadmin-data:
   finance-data:
-
