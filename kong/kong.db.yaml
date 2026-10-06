@@ -1,0 +1,46 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: property-data-product
+    url: http://property-api:4001
+    routes:
+      - name: property-graphql-route
+        paths:
+          - /property/graphql
+        protocols:
+          - http
+          - https             
+        strip_path: true
+    plugins:
+      - name: key-auth
+        config:
+          key_names: [apikey]
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: leasing-data-product
+    url: http://leasing-api:4002
+    routes:
+      - name: leasing-graphql-route
+        paths:
+          - /leasing/graphql
+        protocols:
+          - http
+          - https             
+        strip_path: true
+    plugins:
+      - name: key-auth
+        config:
+          key_names: [apikey]
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+consumers:
+  - username: local-client
+    keyauth_credentials:
+      - key: local-development-key

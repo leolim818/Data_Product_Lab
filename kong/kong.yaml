@@ -1,0 +1,77 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: federated-graphql
+    url: http://apollo-router:4000
+    routes:
+      - name: federated-graphql-route
+        paths:
+          - /graphql
+        protocols:
+          - http
+          - https             
+        strip_path: true
+    plugins:
+      - name: key-auth
+        config:
+          key_names: [apikey]
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: property-data-product
+    url: http://property-api:4001/graphql
+    routes:
+      - name: property-graphql-route
+        paths:
+          - /property/graphql
+        protocols:
+          - http
+          - https             
+        strip_path: true
+    plugins:
+      - name: key-auth
+        config:
+          key_names: [apikey]
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: leasing-data-product
+    url: http://leasing-api:4002/graphql
+    routes:
+      - name: leasing-graphql-route
+        paths:
+          - /leasing/graphql
+        protocols:
+          - http
+          - https             
+        strip_path: true
+    plugins:
+      - name: key-auth
+        config:
+          key_names: [apikey]
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: finance-data-product
+    url: http://portfolio-api:4003/graphql
+
+    routes:
+      - name: finance-graphql-route
+        paths:
+          - /finance/graphql
+        protocols:
+          - http
+          - https
+        strip_path: true
+
+consumers:
+  - username: local-client
+    keyauth_credentials:
+      - key: local-development-key
