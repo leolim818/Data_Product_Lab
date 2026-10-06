@@ -1,0 +1,84 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+{
+  query: Query
+}
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+type FinancialSummary
+  @join__type(graph: FINANCE)
+{
+  annualRevenue: Float!
+  operatingCost: Float!
+  netOperatingIncome: Float!
+}
+
+scalar join__FieldSet
+
+enum join__Graph {
+  FINANCE @join__graph(name: "finance", url: "http://finance-api:4003")
+  LEASING @join__graph(name: "leasing", url: "http://leasing-api:4002")
+  PROPERTY @join__graph(name: "property", url: "http://property-api:4001")
+}
+
+type Lease
+  @join__type(graph: LEASING)
+{
+  id: ID!
+  propertyId: ID!
+  tenantName: String!
+  monthlyRent: Float!
+  status: String!
+}
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+type Property
+  @join__type(graph: FINANCE, key: "id")
+  @join__type(graph: LEASING, key: "id")
+  @join__type(graph: PROPERTY, key: "id")
+{
+  id: ID!
+  financials: FinancialSummary @join__field(graph: FINANCE)
+  leases: [Lease!]! @join__field(graph: LEASING)
+  name: String! @join__field(graph: PROPERTY)
+  type: String! @join__field(graph: PROPERTY)
+  occupancyRate: Float! @join__field(graph: PROPERTY)
+  revenue: Float! @join__field(graph: PROPERTY)
+}
+
+type Query
+  @join__type(graph: FINANCE)
+  @join__type(graph: LEASING)
+  @join__type(graph: PROPERTY)
+{
+  leases: [Lease!]! @join__field(graph: LEASING)
+  properties: [Property!]! @join__field(graph: PROPERTY)
+  property(id: ID!): Property @join__field(graph: PROPERTY)
+}
