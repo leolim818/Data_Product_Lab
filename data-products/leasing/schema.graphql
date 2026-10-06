@@ -1,0 +1,22 @@
+extend schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.3"
+    import: ["@key"]
+  )
+
+type Lease {
+  id: ID!
+  propertyId: ID!
+  tenantName: String!
+  monthlyRent: Float!
+  status: String!
+}
+
+type Property @key(fields: "id") {
+  id: ID!
+  leases: [Lease!]!
+}
+
+type Query {
+  leases: [Lease!]!
+}
