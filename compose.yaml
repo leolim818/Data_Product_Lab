@@ -2,6 +2,10 @@ services:
   kong:
     image: kong/kong-gateway:3.16.0.0
     container_name: 01-kong-gateway
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 65536    
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
