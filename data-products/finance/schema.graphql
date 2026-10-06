@@ -1,0 +1,16 @@
+extend schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.3"
+    import: ["@key"]
+  )
+
+type FinancialSummary {
+  annualRevenue: Float!
+  operatingCost: Float!
+  netOperatingIncome: Float!
+}
+
+type Property @key(fields: "id") {
+  id: ID!
+  financials: FinancialSummary
+}

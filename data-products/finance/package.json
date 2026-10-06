@@ -1,0 +1,14 @@
+{
+  "name": "finance-subgraph",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.0.0",
+    "@apollo/subgraph": "^2.0.0",
+    "graphql": "^16.0.0",
+    "pg": "^8.0.0"
+  }
+}
