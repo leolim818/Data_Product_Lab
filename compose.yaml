@@ -1,0 +1,173 @@
+services:
+  kong:
+    image: kong/kong-gateway:3.16.0.0
+    container_name: 01-kong-gateway
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_GUI_API_URL: "http://localhost:8001"
+
+    volumes:
+      - ./kong/kong.yaml:/kong/declarative/kong.yaml:ro
+    ports:
+      - "8000:8000"
+      - "8001:8001"   # Admin API
+    depends_on:
+      - property-api
+      - leasing-api
+
+  kong-manager:
+    image: kong/kong-gateway:3.16.0.0
+    container_name: 01a-kong-manager
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yaml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8002"
+      KONG_ADMIN_GUI_URL: "http://localhost:8002"
+
+    volumes:
+      - ./kong/kong.yaml:/kong/declarative/kong.yaml:ro
+    ports:
+      - "8002:8002"   # Kong Manager
+    depends_on:
+      - property-api
+      - leasing-api      
+
+  apollo-router:
+    image: ghcr.io/apollographql/router:v1.32.0
+    container_name: 02-apollo-router
+    restart: unless-stopped
+
+    command:
+      - "--dev"
+      - "--config"
+      - "/config/router.yaml"
+      - "--supergraph"
+      - "/config/supergraph.graphql"
+
+    volumes:
+      - ./router/router.yaml:/config/router.yaml:ro
+      - ./router/supergraph.graphql:/config/supergraph.graphql:ro
+
+    ports:
+      - "4000:4000"
+
+    depends_on:
+      - property-api
+      - leasing-api      
+
+  property-api:
+    build: ./data-products/property
+    container_name: 03a-property-api
+    environment:
+      DATABASE_URL: postgresql://property_user:property_password@property-db:5432/property
+      PORT: 4001
+    depends_on:
+      property-db:
+        condition: service_healthy
+    ports:
+      - "4001:4001"
+
+  property-db:
+    image: postgres:16-alpine
+    container_name: 03b-property-db
+    environment:
+      POSTGRES_DB: property
+      POSTGRES_USER: property_user
+      POSTGRES_PASSWORD: property_password
+    volumes:
+      - property-data:/var/lib/postgresql/data
+      #- ./data-products/property/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U property_user -d property"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  leasing-api:
+    build: ./data-products/leasing
+    container_name: 04a-leasing-api
+    environment:
+      DATABASE_URL: postgresql://leasing_user:leasing_password@leasing-db:5432/leasing
+      PORT: 4002
+    depends_on:
+      leasing-db:
+        condition: service_healthy
+    ports:
+      - "4002:4002"
+
+
+  leasing-db:
+    image: postgres:16-alpine
+    container_name: 04b-leasing-db
+    environment:
+      POSTGRES_DB: leasing
+      POSTGRES_USER: leasing_user
+      POSTGRES_PASSWORD: leasing_password
+    volumes:
+      - leasing-data:/var/lib/postgresql/data
+      #- ./data-products/leasing/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leasing_user -d leasing"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  finance-api:
+    build: ./data-products/finance
+    container_name: 05a-finance-api
+    environment:
+      DATABASE_URL: postgresql://finance_user:finance_password@finance-db:5432/finance
+      PORT: 4002
+    depends_on:
+      finance-db:
+        condition: service_healthy
+    ports:
+      - "4003:4003"
+
+
+  finance-db:
+    image: postgres:16-alpine
+    container_name: 05b-finance-db
+    environment:
+      POSTGRES_DB: finance
+      POSTGRES_USER: finance_user
+      POSTGRES_PASSWORD: finance_password
+    volumes:
+      - finance-data:/var/lib/postgresql/data
+      #- ./data-products/finance/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finance_user -d finance"]
+      interval: 5s
+      timeout: 5s
+      retries: 10     
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: 06-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - property-db
+      - leasing-db
+      - finance-db
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin       
+
+
+
+volumes:
+  property-data:
+  leasing-data:
+  pgadmin-data:
+  finance-data:
+
